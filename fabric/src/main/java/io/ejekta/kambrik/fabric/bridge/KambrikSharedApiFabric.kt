@@ -37,13 +37,22 @@ class KambrikSharedApiFabric : KambrikSharedApi {
     }
 
     override fun <M : KambrikMsg> registerClientMessage(serializer: KSerializer<M>, id: CustomPacketPayload.Type<M>): Boolean {
+        // The payload type must be registered during common initialization (before the play protocol is built),
+        // so this is safe to call from a main entrypoint on both sides.
         PayloadTypeRegistry.clientboundPlay().register(id, serializer.toSimplePacketCodec())
         if (!isOnClient()) {
             return true
         }
 
         @Suppress("UNCHECKED_CAST")
-        return clientMessageRegistrar?.invoke(id as CustomPacketPayload.Type<out KambrikMsg>) ?: true
+        val typedId = id as CustomPacketPayload.Type<out KambrikMsg>
+        val registrar = clientMessageRegistrar
+        if (registrar == null) {
+            // Client entrypoint has not run yet; the receiver is attached as soon as it does
+            pendingClientReceivers.add(typedId)
+            return true
+        }
+        return registrar.invoke(typedId)
     }
 
     override fun <M : KambrikMsg> registerServerMessage(serializer: KSerializer<M>, id: CustomPacketPayload.Type<M>): Boolean {
@@ -82,7 +91,16 @@ class KambrikSharedApiFabric : KambrikSharedApi {
     }
 
     companion object {
+        private val pendingClientReceivers = mutableListOf<CustomPacketPayload.Type<out KambrikMsg>>()
+
         var clientMessageRegistrar: ((CustomPacketPayload.Type<out KambrikMsg>) -> Boolean)? = null
+            set(value) {
+                field = value
+                if (value != null) {
+                    pendingClientReceivers.forEach { value.invoke(it) }
+                    pendingClientReceivers.clear()
+                }
+            }
         var clientMessageSender: ((KambrikMsg) -> Unit)? = null
     }
 
