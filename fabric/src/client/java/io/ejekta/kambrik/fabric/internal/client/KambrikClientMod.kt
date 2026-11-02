@@ -15,7 +15,12 @@ object KambrikClientMod : ClientModInitializer {
     override fun onInitializeClient() {
         KambrikSharedApiFabric.clientMessageRegistrar = { id ->
             ClientPlayNetworking.registerGlobalReceiver(id) { payload, context ->
-                (payload as KambrikMsg).onClientReceived()
+                try {
+                    (payload as KambrikMsg).onClientReceived()
+                } catch (e: Throwable) {
+                    Kambrik.Logger.error("Client handler for message ${payload::class.simpleName} failed", e)
+                    throw e
+                }
             }
         }
         KambrikSharedApiFabric.clientMessageSender = { msg ->

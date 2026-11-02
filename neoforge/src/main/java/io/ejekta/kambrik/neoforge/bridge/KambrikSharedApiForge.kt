@@ -60,7 +60,7 @@ class KambrikSharedApiForge() : KambrikSharedApi {
                     PacketFlow.SERVERBOUND -> { p0.onServerReceived(KambrikMsg.MsgContext(p1.player() as ServerPlayer)) }
                 }
             }.exceptionally { throwable ->
-                throwable.printStackTrace()
+                Kambrik.Logger.error("Handler for message ${p0::class.simpleName} (${p1.flow()}) failed", throwable)
                 return@exceptionally null
             }
         }
