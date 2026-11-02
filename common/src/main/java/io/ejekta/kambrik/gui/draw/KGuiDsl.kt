@@ -80,7 +80,7 @@ data class KGuiDsl(val ctx: KGui, val context: GuiGraphicsExtractor, val mouseX:
     fun itemStackWithTooltip(stack: ItemStack, x: Int, y: Int) {
         itemStack(stack, x, y)
         onHover(x, y, 18, 18) {
-            context.setTooltipForNextFrame(fontRenderer, stack, x, y)
+            context.setTooltipForNextFrame(fontRenderer, stack, mouseX, mouseY)
         }
     }
 
@@ -116,7 +116,7 @@ data class KGuiDsl(val ctx: KGui, val context: GuiGraphicsExtractor, val mouseX:
     }
 
     fun text(x: Int, y: Int, text: Component) {
-        context.text(fontRenderer, text, ctx.absX(x), ctx.absY(y), 0xFFFFFF, false)
+        context.text(fontRenderer, text, ctx.absX(x), ctx.absY(y), OPAQUE_WHITE, false)
     }
 
     fun text(x: Int = 0, y: Int = 0, textDsl: KambrikTextBuilder<MutableComponent>.() -> Unit) {
@@ -124,11 +124,11 @@ data class KGuiDsl(val ctx: KGui, val context: GuiGraphicsExtractor, val mouseX:
     }
 
     fun textColored(x: Int, y: Int, text: Component, color: Int, dropShadow: Boolean = false) {
-        context.text(fontRenderer, text, ctx.absX(x), ctx.absY(y), color, dropShadow)
+        context.text(fontRenderer, text, ctx.absX(x), ctx.absY(y), withAlpha(color), dropShadow)
     }
 
     fun textShadowed(x: Int, y: Int, text: Component, color: Int) {
-        context.text(fontRenderer, text, ctx.absX(x), ctx.absY(y), color, true)
+        context.text(fontRenderer, text, ctx.absX(x), ctx.absY(y), withAlpha(color), true)
     }
 
     fun nextStratum() {
@@ -136,7 +136,7 @@ data class KGuiDsl(val ctx: KGui, val context: GuiGraphicsExtractor, val mouseX:
     }
 
     fun textNoShadow(x: Int, y: Int, text: Component) {
-        context.text(fontRenderer, text, ctx.absX(x), ctx.absY(y), 0xFFFFFF, false)
+        context.text(fontRenderer, text, ctx.absX(x), ctx.absY(y), OPAQUE_WHITE, false)
     }
 
     fun textNoShadow(x: Int = 0, y: Int = 0, textDsl: KambrikTextBuilder<MutableComponent>.() -> Unit) {
@@ -149,7 +149,7 @@ data class KGuiDsl(val ctx: KGui, val context: GuiGraphicsExtractor, val mouseX:
             text,
             ctx.absX(x) - fontRenderer.width(text) / 2,
             ctx.absY(y),
-            0xFFFFFF,
+            OPAQUE_WHITE,
             false
         )
     }
@@ -160,10 +160,14 @@ data class KGuiDsl(val ctx: KGui, val context: GuiGraphicsExtractor, val mouseX:
             text,
             ctx.absX(x) - fontRenderer.width(text) / 2,
             ctx.absY(y),
-            color,
+            withAlpha(color),
             dropShadow
         )
     }
+
+    // Since 26.x GuiGraphicsExtractor.text() skips text whose ARGB alpha is 0 (older versions treated it as opaque),
+    // so plain 0xRRGGBB colors passed to the DSL would silently vanish. Treat alpha 0 as opaque, as before.
+    private fun withAlpha(color: Int): Int = if (color ushr 24 == 0) color or OPAQUE_BLACK else color
 
     fun textCentered(x: Int = 0, y: Int = 0, textDsl: KambrikTextBuilder<MutableComponent>.() -> Unit) {
         textCentered(x, y, textLiteral("", textDsl))
@@ -229,6 +233,11 @@ data class KGuiDsl(val ctx: KGui, val context: GuiGraphicsExtractor, val mouseX:
 
     private val areaDsl = AreaDsl(0, 0)
 
+    private companion object {
+        const val OPAQUE_BLACK = 0xFF000000.toInt()
+        const val OPAQUE_WHITE = 0xFFFFFFFF.toInt()
+    }
+
     inner class AreaDsl internal constructor(var w: Int, var h: Int) {
 
         val dsl: KGuiDsl
@@ -263,8 +272,14 @@ data class KGuiDsl(val ctx: KGui, val context: GuiGraphicsExtractor, val mouseX:
         }
 
         fun livingEntity(entityType: EntityType<out LivingEntity>, size: Double = 20.0) {
-            val eet = Minecraft.getInstance().level?.let { entityType.create(it, EntitySpawnReason.LOAD) } ?: return
-            val entity = ctx.entityRenderCache.getOrPut(entityType) { eet }
+            val level = Minecraft.getInstance().level ?: return
+            val entity = ctx.entityRenderCache.getOrPut(entityType) {
+                // ClientLevel.getNextEntityId() returns 0, and Entity.getId() throws for id 0, which the
+                // renderer calls. Display-only entities get the same placeholder id vanilla gives spawner
+                // display entities (BaseSpawner.SET_DISPLAY_ENTITY_ID).
+                entityType.create(level, EntitySpawnReason.LOAD)?.also { it.id = KGui.DISPLAY_ENTITY_ID }
+                    ?: return
+            }
             livingEntity(entity, size)
         }
 

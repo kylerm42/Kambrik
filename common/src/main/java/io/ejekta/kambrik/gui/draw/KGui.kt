@@ -27,6 +27,11 @@ class KGui(
         val dsl = KGuiDsl(this, context, mouseX, mouseY, delta).draw(toDraw)
     }
 
+    companion object {
+        /** Placeholder id for display-only entities (same value vanilla uses for spawner display entities). */
+        const val DISPLAY_ENTITY_ID = -1
+    }
+
     fun pushModal(dsl: KGuiDsl.() -> Unit) = logic.modalStack.add(dsl)
 
     fun absX(relX: Int = 0) = x + coordFunc().first + relX
