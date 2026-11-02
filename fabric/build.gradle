@@ -9,6 +9,5 @@ repositories {
 dependencies {
     implementation("io.ejekta.percale:percale-fabric-${minecraft_version}:${percale_version}")
     include("io.ejekta.percale:percale-fabric-${minecraft_version}:${percale_version}")
-    // ModMenu disabled until a 26.1.2-compatible version is available
-    // runtimeOnly "com.terraformersmc:modmenu:${mod_menu_version}"
+    // ModMenu is only needed in the dev environment of the mod that has a config screen (Bountiful)
 }
