@@ -130,13 +130,13 @@ object KambrikCommands {
 //                val encoded = itemCodec.encodeStart(RegistryOps.of(JsonOps.INSTANCE, source.server.registryManager), held)
 //                println(encoded)
 
-                for (comp in held.componentsPatch.entrySet()) {
+                for (comp in held.componentsPatch.split().added()) {
                     println("COMP:")
-                    println(comp.key)
-                    comp.key.codec()
-                    val cv = comp.value.getOrNull()
+                    println(comp.type())
+                    comp.type().codec()
+                    val cv = comp.value()
                     println(cv)
-                    val codec = comp.key.codec() as Codec<Any>
+                    val codec = comp.type().codec() as Codec<Any>
                     println("CODEC: $codec")
                     val codSer = codec.toSerializer()
                     println("CODESER: $codSer")

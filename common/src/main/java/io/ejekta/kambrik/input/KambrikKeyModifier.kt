@@ -1,7 +1,6 @@
 package io.ejekta.kambrik.input
 
 import net.minecraft.client.Minecraft
-import org.lwjgl.glfw.GLFW
 
 class KambrikKeyModifier(
     val shift: Boolean = false,

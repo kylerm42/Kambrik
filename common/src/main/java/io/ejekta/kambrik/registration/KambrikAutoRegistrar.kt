@@ -9,7 +9,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.serializer
-import net.minecraft.advancements.CriterionTrigger
+import net.minecraft.advancements.triggers.CriterionTrigger
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Registry
 import net.minecraft.core.component.DataComponentType
@@ -39,10 +39,9 @@ import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockBehaviour
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.levelgen.carver.CarverConfiguration
 import net.minecraft.world.level.levelgen.carver.WorldCarver
 import net.minecraft.world.level.levelgen.feature.Feature
-import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration
+import com.mojang.serialization.MapCodec
 
 
 @Suppress("UNCHECKED_CAST")
@@ -72,10 +71,12 @@ interface KambrikAutoRegistrar : KambrikMarker {
         return forRegistration(BuiltInRegistries.BLOCK) { factory(BlockBehaviour.Properties.of().setId(key)) }
     }
 
-    infix fun <C : CarverConfiguration> String.forCarver(carver: () -> WorldCarver<C>): WorldCarver<C> = forRegistration(BuiltInRegistries.CARVER, carver) as WorldCarver<C>
+    // Since 26.3, carvers and features are data-driven: the registries hold MapCodecs for their types.
+    infix fun String.forCarver(carver: () -> MapCodec<out WorldCarver>): Lazy<MapCodec<out WorldCarver>> =
+        forRegistration(BuiltInRegistries.CARVER_TYPE, carver)
 
-    infix fun <FC : FeatureConfiguration> String.forFeature(feature: () -> Feature<FC>): () -> Feature<FC> =
-        forRegistration(BuiltInRegistries.FEATURE, feature) as () -> Feature<FC>
+    infix fun String.forFeature(feature: () -> MapCodec<out Feature>): Lazy<MapCodec<out Feature>> =
+        forRegistration(BuiltInRegistries.FEATURE_TYPE, feature)
 
     infix fun String.forEffect(status: () -> MobEffect) =
         forRegistration(BuiltInRegistries.MOB_EFFECT, status)

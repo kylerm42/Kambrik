@@ -3,8 +3,8 @@ package io.ejekta.kambrik.criterion
 import com.mojang.serialization.JsonOps
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import net.minecraft.advancements.Criterion
-import net.minecraft.advancements.criterion.SimpleCriterionTrigger
+import net.minecraft.advancements.triggers.Criterion
+import net.minecraft.advancements.triggers.SimpleCriterionTrigger
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.GsonHelper
 import java.util.function.Predicate

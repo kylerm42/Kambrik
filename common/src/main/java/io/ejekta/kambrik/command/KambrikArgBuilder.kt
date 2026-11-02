@@ -15,8 +15,9 @@ import com.mojang.brigadier.suggestion.SuggestionProvider
 import com.mojang.brigadier.tree.CommandNode
 import net.minecraft.ChatFormatting
 import net.minecraft.commands.arguments.AngleArgument
-import net.minecraft.commands.arguments.ColorArgument
 import net.minecraft.commands.arguments.EntityArgument
+import net.minecraft.commands.arguments.TeamColorArgument
+import net.minecraft.world.scores.TeamColor
 import net.minecraft.commands.arguments.IdentifierArgument.id
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument
 import net.minecraft.commands.arguments.coordinates.Coordinates
@@ -98,8 +99,8 @@ class KambrikArgBuilder<SRC, A : ArgumentBuilder<SRC, *>>(var arg: A) :
     ) = argument(bool(), word, items, func)
 
     fun argColor(
-        word: String, items: SuggestionProvider<SRC>? = null, func: ArgDslTyped<SRC, ChatFormatting> = {}
-    ) = argument(ColorArgument.color(), word, items, func)
+        word: String, items: SuggestionProvider<SRC>? = null, func: ArgDslTyped<SRC, TeamColor> = {}
+    ) = argument(TeamColorArgument.teamColor(), word, items, func)
 
     fun argFloat(
         word: String, range: ClosedFloatingPointRange<Float>? = null,

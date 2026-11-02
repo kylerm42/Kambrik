@@ -13,7 +13,7 @@ operator fun Vec3i.plus(other: Vec3i): Vec3i {
 }
 
 operator fun BlockPos.plus(other: BlockPos): BlockPos {
-    return BlockPos(this.asVec3i() + other)
+    return BlockPos(x + other.x, y + other.y, z + other.z)
 }
 
 operator fun Vec3.plus(other: Vec3): Vec3 {
@@ -27,7 +27,7 @@ operator fun Vec3i.minus(other: Vec3i): Vec3i {
 }
 
 operator fun BlockPos.minus(other: BlockPos): BlockPos {
-    return BlockPos(this.asVec3i() - other)
+    return BlockPos(x - other.x, y - other.y, z - other.z)
 }
 
 operator fun Vec3.minus(other: Vec3): Vec3 {
@@ -69,7 +69,7 @@ fun Vec3i.dirMask(dir: Direction): Vec3i {
 }
 
 fun BlockPos.dirMask(dir: Direction): BlockPos {
-    return BlockPos(this * Vec3i(dir.stepX, dir.stepY, dir.stepZ))
+    return BlockPos(x * dir.stepX, y * dir.stepY, z * dir.stepZ)
 }
 
 fun Vec3.dirMask(dir: Direction): Vec3 {
